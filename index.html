@@ -1144,21 +1144,24 @@
             // Progress Bar & Stats
             UI.resultProb.textContent = `CONFIDENCE: ${percentVal.toFixed(2)}% | THRESHOLD: ${threshold.toFixed(2)} | LATENCY: ${latency}ms`;
             
-            // BUG FIX: Gunakan objek proxy untuk mengamankan animasi nilai numerik murni
-            let progressProxy = { val: 0 };
+            // PERBAIKAN FINAL NaN%: Ambil angka murni tanpa simbol %
+            let currentNum = parseFloat(UI.progressLabel.innerText) || 0;
+            let counter = { val: currentNum };
             
+            // Animasi bar warna
             gsap.to(UI.progressFill, {
                 width: `${percentVal}%`,
                 duration: 1.5,
-                ease: "power2.out"
+                ease: "power3.out"
             });
             
-            gsap.to(progressProxy, {
+            // Animasi teks angka
+            gsap.to(counter, {
                 val: percentVal,
                 duration: 1.5,
-                ease: "power2.out",
+                ease: "power3.out",
                 onUpdate: function() { 
-                    UI.progressLabel.innerHTML = this.targets()[0].val.toFixed(2) + "%"; 
+                    UI.progressLabel.innerText = counter.val.toFixed(2) + "%"; 
                 }
             });
         }
