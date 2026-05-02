@@ -782,17 +782,17 @@
         if (!isTouchDevice) {
             window.addEventListener('mousemove', (e) => {
                 mouseX = e.clientX;
-                posY = e.clientY;
+                mouseY = e.clientY; // BUG FIXED: Diubah jadi mouseY
                 
-                // Cursor Tracking
+                // Cursor Tracking 
                 cursorDot.style.left = `${mouseX}px`; 
-                cursorDot.style.top = `${posY}px`;
-                cursorOutline.animate({ left: `${mouseX}px`, top: `${posY}px` }, { duration: 500, fill: "forwards" });
+                cursorDot.style.top = `${mouseY}px`; // BUG FIXED
+                cursorOutline.animate({ left: `${mouseX}px`, top: `${mouseY}px` }, { duration: 500, fill: "forwards" });
 
                 // Throttle 3D Parallax using requestAnimationFrame for smoothness
                 requestAnimationFrame(() => {
                     const xOffset = (mouseX / window.innerWidth - 0.5) * 2;
-                    const yOffset = (posY / window.innerHeight - 0.5) * 2;
+                    const yOffset = (mouseY / window.innerHeight - 0.5) * 2; // BUG FIXED
                     
                     gsap.to(".sun-obj", { 
                         x: xOffset * 60, rotationY: xOffset * 15, rotationX: yOffset * -15, duration: 0.5, ease: "power1.out" 
