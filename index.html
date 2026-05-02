@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Dasar -->
+    <title>NebulaCast AI — Prediksi Cuaca Berbasis Edge Machine Learning</title>
+    <meta name="description" content="Aplikasi prediksi cuaca cerah/hujan menggunakan model Deep Learning dan TensorFlow.js yang berjalan langsung di browser tanpa server. Dibuat oleh Mikail Akmal Malaka." />
+    <meta name="keywords" content="Prediksi Cuaca, AI Cuaca, TensorFlow.js, Machine Learning Browser, Cuaca Surabaya, Cuaca Indonesia, Neural Network" />
+    <meta name="author" content="Muhammad Auffa Hakim Aditya" />
+    
+    <!-- Open Graph / Facebook / WhatsApp (Agar keren saat link di-share) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://URL_VERCEL_ANDA.vercel.app/" />
+    <meta property="og:title" content="NebulaCast AI — Premium Edge Inference Engine" />
+    <meta property="og:description" content="Aplikasi prediksi cuaca cerah/hujan menggunakan model Deep Learning langsung di browser." />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+           1. CSS VARIABLES & RESET
+           ========================================================================== */
+        :root {
+            /* Core Colors */
+            --bg: #030305;
+            --surface: #0a0a0c;
+            --surface-glass: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            
+            /* Typography Colors */
+            --text-main: #ffffff;
+            --text-muted: #8a8a93;
+            
+            /* Accent Colors */
+            --primary: #c084fc;
+            --secondary: #22d3ee;
+            --accent-sun: #fcd34d;
+            --accent-rain: #60a5fa;
+            --accent-storm: #a855f7;
+            
+            /* Status Colors */
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            
+            /* Layout & Geometry */
+            --radius-xl: 32px;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --container: 1400px;
+            
+            /* Animations */
+            --transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            cursor: none; /* Custom cursor overriding */
+        }
+
+        /* Lenis smooth scroll overrides */
+        html.lenis {
+            height: auto;
+        }
+        .lenis.lenis-smooth {
+            scroll-behavior: auto;
+        }
+        .lenis.lenis-stopped {
+            overflow: hidden;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ==========================================================================
+           2. CUSTOM CURSOR
+           ========================================================================== */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-main);
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+        
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        
+        .cursor-outline.hover {
+            width: 70px;
+            height: 70px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.8);
+            mix-blend-mode: difference;
+        }
+
+        /* DISABLE CUSTOM CURSOR ON TOUCH DEVICES */
+        @media (hover: none) and (pointer: coarse) {
+            * { cursor: auto !important; }
+            .cursor-dot, .cursor-outline { display: none !important; }
+        }
+
+        /* ==========================================================================
+           3. AMBIENT BACKGROUND & CANVAS
+           ========================================================================== */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -3;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        /* Neural Network Particle Canvas */
+        #particleCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.6;
+        }
+
+        .grid-bg {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+            z-index: -1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.3;
+            animation: float 25s infinite ease-in-out alternate;
+        }
+        
+        .orb-1 {
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(192,132,252,0.15), transparent 60%);
+            top: -20%;
+            left: -10%;
+        }
+        
+        .orb-2 {
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(34,211,238,0.15), transparent 60%);
+            bottom: -10%;
+            right: -10%;
+            animation-delay: -7s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(6vw, 6vw) scale(1.1); }
+        }
+
+        /* ==========================================================================
+           4. 3D WEATHER OBJECTS (AWWWARDS STYLE)
+           ========================================================================== */
+        .weather-scene {
+            position: absolute;
+            top: 10%;
+            right: 5%;
+            width: 600px;
+            height: 600px;
+            pointer-events: none;
+            z-index: 0;
+            perspective: 1200px;
+            transform-origin: center right;
+        }
+
+        /* OBJECT 1: THE SUN (CLEAR) */
+        .sun-obj {
+            position: absolute;
+            top: 25%;
+            right: 25%;
+            width: 220px;
+            height: 220px;
+            transform-style: preserve-3d;
+            opacity: 0.1; /* Dim initially */
+        }
+        
+        .sun-core {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fffbeb, #fcd34d 40%, #d97706);
+            box-shadow: 
+                0 0 80px rgba(245, 158, 11, 0.8), 
+                inset -15px -15px 30px rgba(0, 0, 0, 0.3);
+            animation: pulseSun 4s infinite alternate;
+        }
+
+        .sun-ring {
+            position: absolute;
+            top: -30px; left: -30px; right: -30px; bottom: -30px;
+            border: 2px dashed rgba(252, 211, 77, 0.5);
+            border-radius: 50%;
+            transform: rotateX(75deg) rotateY(15deg);
+            animation: spinRing 20s linear infinite;
+        }
+
+        .sun-ring.ring-2 {
+            top: -60px; left: -60px; right: -60px; bottom: -60px;
+            border: 1px solid rgba(252, 211, 77, 0.2);
+            transform: rotateX(75deg) rotateY(-15deg);
+            animation: spinRing reverse 30s linear infinite;
+        }
+
+        @keyframes pulseSun {
+            0% { transform: scale(1); box-shadow: 0 0 60px rgba(245, 158, 11, 0.6); }
+            100% { transform: scale(1.05); box-shadow: 0 0 100px rgba(245, 158, 11, 0.9); }
+        }
+
+        @keyframes spinRing {
+            0% { transform: rotateX(75deg) rotateY(15deg) rotateZ(0deg); }
+            100% { transform: rotateX(75deg) rotateY(15deg) rotateZ(360deg); }
+        }
+
+        /* OBJECT 2: RAIN CLOUD (MODERATE RAIN) */
+        .cloud-obj {
+            position: absolute;
+            top: 35%;
+            left: 0;
+            width: 350px;
+            height: 250px;
+            transform-style: preserve-3d;
+            opacity: 0.1;
+        }
+
+        .cloud-base {
+            position: absolute;
+            bottom: 60px;
+            left: 50px;
+            width: 240px;
+            height: 90px;
+            background: linear-gradient(180deg, #64748b, #1e293b);
+            border-radius: 120px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 15px 25px rgba(255,255,255,0.15);
+        }
+
+        .cloud-puff {
+            position: absolute;
+            background: linear-gradient(180deg, #94a3b8, #334155);
+            border-radius: 50%;
+            box-shadow: inset 0 15px 25px rgba(255,255,255,0.1);
+        }
+
+        .puff-1 { width: 140px; height: 140px; bottom: 90px; left: 80px; }
+        .puff-2 { width: 110px; height: 110px; bottom: 80px; left: 170px; }
+        .puff-3 { width: 80px; height: 80px; bottom: 70px; left: 40px; }
+
+        .rain-container {
+            position: absolute;
+            bottom: -60px;
+            left: 70px;
+            width: 180px;
+            height: 120px;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-evenly;
+            transform: translateZ(-10px);
+        }
+
+        .drop {
+            width: 3px;
+            height: 25px;
+            background: linear-gradient(180deg, transparent, var(--secondary));
+            border-radius: 10px;
+            animation: rainDrop 0.8s linear infinite;
+        }
+
+        .drop:nth-child(2) { animation-delay: 0.2s; height: 35px; }
+        .drop:nth-child(3) { animation-delay: 0.5s; height: 20px; }
+        .drop:nth-child(4) { animation-delay: 0.1s; height: 30px; }
+        .drop:nth-child(5) { animation-delay: 0.4s; height: 25px; }
+
+        @keyframes rainDrop {
+            0% { transform: translateY(-30px); opacity: 0; }
+            30% { opacity: 1; }
+            100% { transform: translateY(120px); opacity: 0; }
+        }
+
+        /* OBJECT 3: THUNDERSTORM (HEAVY RAIN) */
+        .storm-obj {
+            position: absolute;
+            top: 30%;
+            left: 5%;
+            width: 400px;
+            height: 300px;
+            transform-style: preserve-3d;
+            opacity: 0.1;
+        }
+
+        .storm-base {
+            position: absolute;
+            bottom: 60px;
+            left: 50px;
+            width: 280px;
+            height: 100px;
+            background: linear-gradient(180deg, #334155, #020617);
+            border-radius: 120px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 10px 20px rgba(255,255,255,0.05);
+            animation: flashCloud 5s infinite;
+        }
+
+        .storm-puff {
+            position: absolute;
+            background: linear-gradient(180deg, #475569, #0f172a);
+            border-radius: 50%;
+            animation: flashCloud 5s infinite;
+        }
+
+        .s-puff-1 { width: 160px; height: 160px; bottom: 100px; left: 90px; }
+        .s-puff-2 { width: 130px; height: 130px; bottom: 80px; left: 200px; }
+        .s-puff-3 { width: 100px; height: 100px; bottom: 70px; left: 50px; }
+
+        .storm-rain {
+            position: absolute;
+            bottom: -100px;
+            left: 70px;
+            width: 220px;
+            height: 160px;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-evenly;
+            transform: translateZ(-20px) rotate(-10deg);
+        }
+
+        .s-drop {
+            width: 4px;
+            height: 40px;
+            background: linear-gradient(180deg, transparent, #a855f7, #ffffff);
+            border-radius: 10px;
+            animation: heavyRainDrop 0.5s linear infinite;
+        }
+
+        .s-drop:nth-child(even) { animation-delay: 0.15s; height: 50px; }
+        .s-drop:nth-child(3n) { animation-delay: 0.3s; height: 35px; }
+
+        @keyframes heavyRainDrop {
+            0% { transform: translateY(-40px); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(160px); opacity: 0; }
+        }
+
+        @keyframes flashCloud {
+            0%, 94%, 98%, 100% { filter: brightness(1); }
+            95% { filter: brightness(2.5) drop-shadow(0 0 50px rgba(168, 85, 247, 0.8)); }
+            97% { filter: brightness(1.2); }
+            99% { filter: brightness(3) drop-shadow(0 0 80px rgba(255, 255, 255, 0.9)); }
+        }
+
+        /* ==========================================================================
+           5. TYPOGRAPHY & UTILITIES
+           ========================================================================== */
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            letter-spacing: -0.04em;
+        }
+
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+
+        .container {
+            max-width: var(--container);
+            margin: 0 auto;
+            padding: 0 5%;
+            position: relative;
+        }
+
+        /* ==========================================================================
+           6. NAVBAR
+           ========================================================================== */
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 32px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 50;
+            transition: var(--transition);
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav.scrolled {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            background: rgba(3, 3, 5, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            box-shadow: 0 0 24px rgba(192,132,252,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-mark::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: var(--bg);
+            border-radius: 50%;
+        }
+
+        /* ==========================================================================
+           7. HERO SECTION
+           ========================================================================== */
+        .hero {
+            padding: 200px 0 120px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .hero-decor {
+            position: absolute;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+        }
+
+        .decor-top-left {
+            top: 140px;
+            left: 5%;
+            border-left: 1px solid var(--primary);
+            padding-left: 12px;
+            line-height: 1.8;
+        }
+
+        .decor-bottom-right {
+            bottom: 100px;
+            right: 5%;
+            text-align: right;
+            border-right: 1px solid var(--secondary);
+            padding-right: 12px;
+            line-height: 1.8;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 20px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--surface-glass);
+            backdrop-filter: blur(8px);
+            font-size: 13px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            color: var(--text-main);
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .hero h1 {
+            font-size: clamp(48px, 9vw, 140px);
+            line-height: 0.85;
+            max-width: 1200px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 span.word {
+            display: inline-block;
+            transform-origin: left bottom;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #ffffff, #a5b4fc, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: clamp(16px, 2vw, 26px);
+            color: var(--text-muted);
+            max-width: 750px;
+            margin-bottom: 56px;
+            font-weight: 300;
+            line-height: 1.5;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 48px;
+            border-radius: 100px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: 0.05em;
+            border: none;
+            transition: transform 0.4s, box-shadow 0.4s, background-color 0.4s;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease-in-out;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--text-main);
+            color: var(--bg);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(255,255,255,0.2);
+        }
+
+        .btn-ghost {
+            background: rgba(255,255,255,0.02);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            margin-left: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-4px);
+        }
+
+        /* ==========================================================================
+           8. INFINITE MARQUEE
+           ========================================================================== */
+        .marquee {
+            width: 100%;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 32px 0;
+            background: rgba(10, 10, 12, 0.4);
+            backdrop-filter: blur(20px);
+            display: flex;
+            overflow: hidden;
+            user-select: none;
+            position: relative;
+            z-index: 10;
+        }
+
+        .marquee-inner {
+            display: flex;
+            flex-shrink: 0;
+            animation: scrollText 35s linear infinite;
+        }
+
+        .marquee-inner span {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 0 50px;
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+
+        .marquee-inner span::after {
+            content: '✦';
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        @keyframes scrollText {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* ==========================================================================
+           9. BENTO GRID DASHBOARD
+           ========================================================================== */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            padding: 140px 0;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .bento-card {
+            background: rgba(10, 10, 12, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 56px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bento-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.5s;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.05), transparent 40%);
+            pointer-events: none;
+        }
+
+        .bento-card:hover::before {
+            opacity: 1;
+        }
+
+        .bento-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Spanning rules */
+        .col-span-8 { grid-column: span 8; }
+        .col-span-4 { grid-column: span 4; }
+        .col-span-12 { grid-column: span 12; }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 48px;
+        }
+
+        .card-title {
+            font-size: 36px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .card-subtitle {
+            color: var(--text-muted);
+            font-size: 16px;
+            font-family: 'Space Grotesk', monospace;
+        }
+
+        /* ==========================================================================
+           10. FORMS & INPUTS
+           ========================================================================== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 40px 32px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+            font-size: 24px;
+            padding: 12px 0;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-bottom-color: var(--secondary);
+            padding-left: 12px;
+            color: var(--secondary);
+        }
+
+        .input-group::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 1px;
+            background: var(--primary);
+            transition: width 0.4s ease;
+        }
+
+        .input-group:focus-within::after {
+            width: 100%;
+        }
+
+        .action-bar {
+            margin-top: 64px;
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .status-hud {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 32px;
+            border-radius: 100px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--warning);
+            box-shadow: 0 0 16px var(--warning);
+            transition: var(--transition);
+        }
+        .status-dot.ready { background: var(--success); box-shadow: 0 0 16px var(--success); }
+        .status-dot.error { background: var(--danger); box-shadow: 0 0 16px var(--danger); }
+
+        .status-text-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        #statusTitle {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-main);
+        }
+
+        #statusText {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* ==========================================================================
+           11. RESULTS DISPLAY
+           ========================================================================== */
+        .result-display {
+            text-align: center;
+            padding: 40px 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-lg);
+            background: rgba(255,255,255,0.01);
+            margin-bottom: 40px;
+        }
+
+        .result-city {
+            font-size: 16px;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .result-main {
+            font-size: clamp(48px, 6vw, 80px);
+            font-weight: 700;
+            line-height: 1.1;
+            display: inline-block;
+            background: linear-gradient(180deg, #ffffff, #64748b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+        }
+        
+        .prob-container { margin-top: auto; }
+
+        .prob-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .prob-bar-bg {
+            height: 16px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 100px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .prob-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            border-radius: 100px;
+            transition: width 2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .prob-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        /* ==========================================================================
+           12. TERMINAL LOGGER
+           ========================================================================== */
+        .terminal-container {
+            background: #000000;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            color: var(--success);
+            line-height: 1.8;
+            box-shadow: inset 0 0 20px rgba(0,0,0,1);
+        }
+        .terminal-container::-webkit-scrollbar { width: 8px; }
+        .terminal-container::-webkit-scrollbar-track { background: #000; }
+        .terminal-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+        .log-line { opacity: 0.8; margin-bottom: 4px; }
+        .log-line .timestamp { color: #64748b; margin-right: 12px; }
+        .log-line.error { color: var(--danger); }
+        .log-line.warn { color: var(--warning); }
+        .log-line.info { color: var(--secondary); }
+
+        /* ==========================================================================
+           13. FOOTER
+           ========================================================================== */
+        footer {
+            text-align: center;
+            padding: 60px 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            border-top: 1px solid var(--border);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            background: var(--surface);
+        }
+
+        /* ==========================================================================
+           14. MOBILE RESPONSIVE MEDIA QUERIES
+           ========================================================================== */
+        
+        /* TABLET & SMALL DESKTOP */
+        @media (max-width: 1024px) {
+            .col-span-8, .col-span-4 { grid-column: span 12; }
+            .weather-scene { transform: scale(0.7); right: -10%; top: 5%; }
+            .hero { padding: 160px 0 80px; }
+        }
+
+        /* MOBILE DEVICES (PHONES) */
+        @media (max-width: 768px) {
+            .container { padding: 0 6%; }
+            
+            /* Hide non-essential ambient items to clean up small screens */
+            .decor-bottom-right { display: none; }
+            
+            /* Scale down 3D Objects significantly and push to background */
+            .weather-scene {
+                transform: scale(0.45);
+                right: -30%;
+                top: 5%;
+                opacity: 0.3;
+                z-index: -1;
+            }
+
+            /* Adjust Hero */
+            .hero { padding: 130px 0 60px; min-height: auto; }
+            .hero h1 { font-size: clamp(40px, 12vw, 64px); margin-bottom: 24px; line-height: 0.9; }
+            .hero p { font-size: 16px; margin-bottom: 40px; }
+            
+            /* Stack Hero Buttons */
+            .hero-btns {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+                margin-left: 0 !important; /* Override desktop margin */
+                padding: 16px 24px;
+            }
+
+            /* Bento Grid Adjustments */
+            .bento-grid { padding: 60px 0; gap: 16px; }
+            .bento-card { padding: 32px 24px; border-radius: var(--radius-lg); }
+            
+            .card-header { margin-bottom: 32px; }
+            .card-title { font-size: 28px; }
+            .card-subtitle { font-size: 14px; }
+            
+            /* Form Grid Adjustments */
+            .form-grid { gap: 24px 16px; }
+            .input-group input { font-size: 18px; }
+            
+            /* Action Bar & HUD Adjustments */
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+                margin-top: 40px;
+                gap: 16px;
+            }
+            .status-hud {
+                min-width: 100%;
+                padding: 16px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+            
+            /* Marquee */
+            .marquee { padding: 20px 0; }
+            .marquee-inner span { font-size: 14px; padding: 0 30px; gap: 30px; }
+
+            /* Results Output Adjustment */
+            .result-main { font-size: 48px; }
+            .terminal-container { font-size: 11px; padding: 16px; }
+            
+            footer { padding: 40px 0; font-size: 12px; }
+        }
+
+        /* VERY SMALL PHONES (e.g., iPhone SE) */
+        @media (max-width: 400px) {
+            .weather-scene { transform: scale(0.35); right: -50%; }
+            .bento-card { padding: 24px 16px; }
+            .card-title { font-size: 24px; }
+            .btn { font-size: 14px; padding: 14px 20px; }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- CUSTOM CURSOR -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-outline" id="cursorOutline"></div>
+
+    <!-- BACKGROUND EFFECTS -->
+    <div class="ambient-bg">
+        <!-- Neural Network Canvas -->
+        <canvas id="particleCanvas"></canvas>
+        <div class="grid-bg"></div>
+        
+        <!-- 3D AWESOME WEATHER SCENE -->
+        <div class="weather-scene">
+            
+            <!-- 1. Sun Object (Cerah) -->
+            <div class="sun-obj" id="sunObj">
+                <div class="sun-ring"></div>
+                <div class="sun-ring ring-2"></div>
+                <div class="sun-core"></div>
+            </div>
+            
+            <!-- 2. Cloud Object (Hujan Sedang) -->
+            <div class="cloud-obj" id="cloudObj">
+                <div class="cloud-puff puff-1"></div>
+                <div class="cloud-puff puff-2"></div>
+                <div class="cloud-puff puff-3"></div>
+                <div class="cloud-base"></div>
+                <div class="rain-container">
+                    <div class="drop d1"></div><div class="drop d2"></div>
+                    <div class="drop d3"></div><div class="drop d4"></div><div class="drop d5"></div>
+                </div>
+            </div>
+
+            <!-- 3. Storm Object (Hujan Lebat / Badai) -->
+            <div class="storm-obj" id="stormObj">
+                <div class="storm-puff s-puff-1"></div>
+                <div class="storm-puff s-puff-2"></div>
+                <div class="storm-puff s-puff-3"></div>
+                <div class="storm-base"></div>
+                <div class="storm-rain">
+                    <div class="s-drop"></div><div class="s-drop"></div><div class="s-drop"></div>
+                    <div class="s-drop"></div><div class="s-drop"></div><div class="s-drop"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="nav" id="navbar">
+        <div class="container" style="display: flex; justify-content: space-between; width: 100%;">
+            <div class="brand">
+                <div class="logo-mark"></div>
+                NebulaCast AI
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        
+        <!-- HERO SECTION -->
+        <section class="hero container">
+            <div class="hero-decor decor-top-left">SYS.INIT // V.3.1.0<br>RUNTIME: TENSORFLOW.JS<br>LOC: ID-SBY</div>
+            <div class="hero-decor decor-bottom-right">CLIENT-SIDE INFERENCE<br>ZERO LATENCY MODE<br>STATUS: ACTIVE</div>
+
+            <div class="badge">
+                <div class="badge-dot"></div>
+                Edge Inference Architecture
+            </div>
+            
+            <!-- Title with Staggered Words -->
+            <h1>
+                <span class="word">Intelligent</span> <span class="word">Weather</span> <br />
+                <span class="word gradient-text">Prediction</span> <span class="word gradient-text">Runtime.</span>
+            </h1>
+            
+            <p class="hero-desc">Eksekusi arsitektur jaringan saraf tiruan (Neural Network) sekelas produksi secara langsung di dalam browser Anda. Rasakan inferensi berkecepatan tinggi tanpa intervensi server (backend-less).</p>
+            
+            <div class="hero-btns">
+                <button class="btn btn-primary" onclick="document.getElementById('predictor').scrollIntoView({behavior: 'smooth'})">Initialize Engine</button>
+                <button class="btn btn-ghost" onclick="document.getElementById('terminalSection').scrollIntoView({behavior: 'smooth'})">System Logs</button>
+            </div>
+        </section>
+
+        <!-- INFINITE SCROLLING MARQUEE -->
+        <div class="marquee">
+            <div class="marquee-inner">
+                <span>Machine Learning Runtime</span>
+                <span>TensorFlow.js Edge</span>
+                <span>Zero Latency Inference</span>
+                <span>Client-Side Processing</span>
+                <span>Neural Network Architect</span>
+                <span>Data Preprocessing</span>
+                
+                <!-- Duplicated for seamless loop -->
+                <span>Machine Learning Runtime</span>
+                <span>TensorFlow.js Edge</span>
+                <span>Zero Latency Inference</span>
+                <span>Client-Side Processing</span>
+                <span>Neural Network Architect</span>
+                <span>Data Preprocessing</span>
+            </div>
+        </div>
+
+        <!-- DASHBOARD SECTION -->
+        <section id="predictor" class="container">
+            <div class="bento-grid">
+                
+                <!-- Input Parameters Card -->
+                <div class="bento-card col-span-8 card-glow">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Inference Parameters</h2>
+                            <p class="card-subtitle">Feed raw numerical data into the neural network layers.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Location Target</label>
+                            <input id="cityName" type="text" value="Surabaya" />
+                        </div>
+                        <div class="input-group">
+                            <label>Tn (Min Temp °C)</label>
+                            <input id="tn" type="number" step="any" value="26.0" />
+                        </div>
+                        <div class="input-group">
+                            <label>Tx (Max Temp °C)</label>
+                            <input id="tx" type="number" step="any" value="34.0" />
+                        </div>
+                        <div class="input-group">
+                            <label>Tavg (Avg Temp °C)</label>
+                            <input id="tavg" type="number" step="any" value="30.0" />
+                        </div>
+                        <div class="input-group">
+                            <label>RH_avg (Humidity %)</label>
+                            <input id="rh" type="number" step="any" value="75.0" />
+                        </div>
+                        <div class="input-group">
+                            <label>ff_x (Max Wind m/s)</label>
+                            <input id="ffx" type="number" step="any" value="5.0" />
+                        </div>
+                        <div class="input-group">
+                            <label>ff_avg (Avg Wind m/s)</label>
+                            <input id="ffavg" type="number" step="any" value="2.0" />
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <button class="btn btn-primary" id="loadModelBtn">Load Pipeline</button>
+                        <button class="btn btn-ghost" id="predictBtn">Execute Inference</button>
+                        
+                        <div class="status-hud">
+                            <div class="status-dot" id="statusDot"></div>
+                            <div class="status-text-wrap">
+                                <span id="statusTitle">System Idle</span>
+                                <span id="statusText" class="font-mono">Awaiting module initialization...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prediction Output Card -->
+                <div class="bento-card col-span-4 card-glow" id="resultCard" style="display: flex; flex-direction: column;">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Analysis Output</h2>
+                            <p class="card-subtitle">Engine: TFJS Layers Model</p>
+                        </div>
+                    </div>
+                        
+                    <div class="result-display">
+                        <div class="result-city" id="resultCity">TARGET: —</div>
+                        <div class="result-main" id="resultText">N/A</div>
+                        <div style="color: var(--text-muted); font-size: 13px;" id="resultProb" class="font-mono">
+                            Initiate pipeline to view tensor output.
+                        </div>
+                    </div>
+
+                    <div class="prob-container">
+                        <div class="prob-label">
+                            <span>Rain Probability Curve</span>
+                            <span id="progressLabel" style="color: var(--text-main); font-weight: 700;">0.00%</span>
+                        </div>
+                        <div class="prob-bar-bg">
+                            <div class="prob-bar-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Logs Terminal -->
+                <div class="bento-card col-span-12 card-glow" id="terminalSection">
+                    <h2 class="card-title" style="font-size: 24px;">System Logs</h2>
+                    <p class="card-subtitle" style="margin-bottom: 24px;">Live inference console output.</p>
+                    
+                    <div class="terminal-container" id="terminal">
+                        <div class="log-line">
+                            <span class="timestamp">[SYSTEM]</span> NebulaCast AI Engine v3.1.0 Initialized.
+                        </div>
+                        <div class="log-line">
+                            <span class="timestamp">[INFO]</span> Configured for user: Hakid. Location context: Surabaya.
+                        </div>
+                        <div class="log-line">
+                            <span class="timestamp">[WAIT]</span> Ready to load model architecture...
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">&copy; 2026 NebulaCast AI. Developed by Muhammad Auffa Hakim Aditya.</div>
+    </footer>
+
+    <!-- EXTERNAL LIBRARIES -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- CORE APPLICATION LOGIC -->
+    <script>
+        /* ==========================================================================
+           A. CUSTOM CURSOR & 3D PARALLAX EFFECT
+           ========================================================================== */
+        const cursorDot = document.getElementById('cursorDot');
+        const cursorOutline = document.getElementById('cursorOutline');
+        
+        // Continuous floating animation for weather objects
+        gsap.to(".sun-obj", { y: -25, duration: 4, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        gsap.to(".cloud-obj", { y: 25, duration: 5, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        gsap.to(".storm-obj", { y: 15, duration: 3, repeat: -1, yoyo: true, ease: "sine.inOut" });
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+            
+            // Cursor Tracking (Hanya aktif jika tidak di layar sentuh berkat CSS Media Query)
+            cursorDot.style.left = `${posX}px`; 
+            cursorDot.style.top = `${posY}px`;
+            cursorOutline.animate({ left: `${posX}px`, top: `${posY}px` }, { duration: 500, fill: "forwards" });
+
+            // 3D Parallax Calculation
+            const xOffset = (posX / window.innerWidth - 0.5) * 2;
+            const yOffset = (posY / window.innerHeight - 0.5) * 2;
+            
+            gsap.to(".sun-obj", { 
+                x: xOffset * 60, rotationY: xOffset * 15, rotationX: yOffset * -15, duration: 1, ease: "power2.out" 
+            });
+            gsap.to(".cloud-obj", { 
+                x: xOffset * -90, rotationY: xOffset * -20, rotationX: yOffset * 20, duration: 1, ease: "power2.out" 
+            });
+            gsap.to(".storm-obj", { 
+                x: xOffset * -100, rotationY: xOffset * -25, rotationX: yOffset * 25, duration: 1, ease: "power2.out" 
+            });
+        });
+
+        // Hover Effect on interactable elements
+        const interactables = document.querySelectorAll('button, a, input');
+        interactables.forEach(el => {
+            el.addEventListener('mouseenter', () => cursorOutline.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursorOutline.classList.remove('hover'));
+        });
+
+        // Dynamic Glow on Bento Cards
+        document.querySelectorAll('.card-glow').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            });
+        });
+
+        /* ==========================================================================
+           B. CANVAS PARTICLE NETWORK (BACKGROUND)
+           ========================================================================== */
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(192, 132, 252, 0.5)';
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = Math.floor((canvas.width * canvas.height) / 20000);
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                // Connect nearby particles
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(34, 211, 238, ${1 - distance / 120})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        initParticles();
+        animateParticles();
+
+        /* ==========================================================================
+           C. GSAP SCROLL & STAGGER ANIMATIONS
+           ========================================================================== */
+        const lenis = new Lenis({ duration: 1.2, smooth: true });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        gsap.registerPlugin(ScrollTrigger);
+        
+        // Staggered text reveal for Hero Section
+        gsap.from(".hero .hero-decor", { opacity: 0, duration: 1, delay: 0.2 });
+        gsap.from(".hero .badge", { y: 20, opacity: 0, duration: 1, ease: "power3.out" });
+        gsap.from(".hero h1 .word", { y: 100, opacity: 0, rotationZ: 5, duration: 1.2, stagger: 0.15, ease: "back.out(1.2)", delay: 0.3 });
+        gsap.from(".hero .hero-desc", { y: 20, opacity: 0, duration: 1, delay: 0.9, ease: "power3.out" });
+        gsap.from(".hero .hero-btns", { y: 20, opacity: 0, duration: 1, delay: 1.1, ease: "power3.out" });
+
+        // Reveal Bento Cards on Scroll
+        gsap.from(".bento-card", {
+            scrollTrigger: { trigger: "#predictor", start: "top 80%" },
+            y: 120, opacity: 0, duration: 1.2, stagger: 0.2, ease: "power4.out"
+        });
+
+        // Navbar blur toggler
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        /* ==========================================================================
+           D. TERMINAL LOGGER LOGIC
+           ========================================================================== */
+        const terminalUI = document.getElementById('terminal');
+        
+        const Logger = {
+            log(msg, type = 'info') {
+                const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
+                const div = document.createElement('div');
+                div.className = `log-line ${type}`;
+                div.innerHTML = `<span class="timestamp">[${time}]</span> ${msg}`;
+                terminalUI.appendChild(div);
+                
+                // Auto scroll to bottom
+                terminalUI.scrollTop = terminalUI.scrollHeight;
+            }
+        };
+
+        /* ==========================================================================
+           E. MACHINE LEARNING LOGIC (TENSORFLOW.JS)
+           ========================================================================== */
+        let tfModel;
+        let tfMetadata;
+
+        const UI = {
+            loadBtn: document.getElementById('loadModelBtn'),
+            predictBtn: document.getElementById('predictBtn'),
+            statusDot: document.getElementById('statusDot'),
+            statusTitle: document.getElementById('statusTitle'),
+            statusText: document.getElementById('statusText'),
+            resultCity: document.getElementById('resultCity'),
+            resultText: document.getElementById('resultText'),
+            resultProb: document.getElementById('resultProb'),
+            progressFill: document.getElementById('progressFill'),
+            progressLabel: document.getElementById('progressLabel'),
+            sunObj: document.getElementById('sunObj'),
+            cloudObj: document.getElementById('cloudObj'),
+            stormObj: document.getElementById('stormObj')
+        };
+
+        function setStatus(type, title, text) {
+            UI.statusDot.className = 'status-dot'; // reset
+            if (type !== 'idle') UI.statusDot.classList.add(type);
+            UI.statusTitle.textContent = title;
+            UI.statusText.textContent = text;
+        }
+
+        async function initPipeline() {
+            try {
+                setStatus('idle', 'INITIALIZING...', 'Fetching tensor graph & metadata...');
+                Logger.log("Initiating pipeline load sequence...", "info");
+                
+                // 1. Load Model
+                Logger.log("Fetching TFJS Layers Model from ./model/model.json", "info");
+                tfModel = await tf.loadLayersModel('./model/model.json');
+                Logger.log("Model weights successfully loaded into memory.", "success");
+                
+                // 2. Load Metadata
+                Logger.log("Fetching scaler metadata from ./metadata/preprocessing.json", "info");
+                const response = await fetch('./metadata/preprocessing.json');
+                tfMetadata = await response.json();
+                Logger.log("MinMax Scaler parameters injected.", "success");
+
+                setStatus('ready', 'SYSTEM ONLINE', 'Neural network & Scaler verified.');
+                Logger.log("Pipeline fully armed and ready for inference.", "success");
+                
+                // GSAP UI feedback
+                gsap.fromTo(UI.statusDot, {scale: 3}, {scale: 1, duration: 0.8, ease: "elastic.out(1, 0.3)"});
+                
+            } catch (error) {
+                console.error("Pipeline Error:", error);
+                setStatus('error', 'FATAL ERROR', 'Model verification failed. Check logs.');
+                Logger.log(`ERROR: ${error.message}`, "error");
+            }
+        }
+
+        function minMaxTransform(inputs, meta) {
+            return inputs.map((val, i) => {
+                let scaled = (val - meta.data_min[i]) / meta.range[i];
+                if (scaled < 0.0) scaled = 0.0;
+                if (scaled > 1.0) scaled = 1.0;
+                return scaled;
+            });
+        }
+
+        async function executeInference() {
+            if (!tfModel || !tfMetadata) {
+                alert("Sistem belum aktif. Klik 'Load Pipeline' terlebih dahulu.");
+                Logger.log("Rejected inference request: Pipeline not loaded.", "warn");
+                return;
+            }
+
+            // UI Animation for processing
+            gsap.to("#resultCard", { scale: 0.98, duration: 0.1, yoyo: true, repeat: 1 });
+            Logger.log("Collecting input tensors...", "info");
+
+            const cityName = document.getElementById('cityName').value;
+            const inputMentah = [
+                parseFloat(document.getElementById('tn').value),
+                parseFloat(document.getElementById('tx').value),
+                parseFloat(document.getElementById('tavg').value),
+                parseFloat(document.getElementById('rh').value),
+                parseFloat(document.getElementById('ffx').value),
+                parseFloat(document.getElementById('ffavg').value)
+            ];
+
+            Logger.log(`Raw features extracted for: ${cityName.toUpperCase()}`, "info");
+
+            // Measure inference time
+            const startTime = performance.now();
+
+            // Transform & Predict
+            const inputScaled = minMaxTransform(inputMentah, tfMetadata);
+            const tensorInput = tf.tensor2d([inputScaled]);
+            const predictionTensor = tfModel.predict(tensorInput);
+            
+            // Extract Data
+            const probValue = predictionTensor.dataSync()[0];
+            const percentStr = (probValue * 100).toFixed(2);
+            const threshold = tfMetadata.threshold;
+            
+            const endTime = performance.now();
+            const latency = (endTime - startTime).toFixed(2);
+            
+            Logger.log(`Inference completed in ${latency}ms. Raw output: ${probValue.toFixed(4)}`, "success");
+
+            // Cleanup memory
+            tf.dispose([tensorInput, predictionTensor]);
+
+            // ===============================================================
+            // LOGIKA VISUALISASI CUACA (3 OBJEK)
+            // ===============================================================
+            let weatherText = "CERAH ☀️";
+            let weatherType = "SUN"; // Default
+
+            if (probValue >= threshold) {
+                if (probValue >= 0.75) {
+                    // Probabilitas sangat tinggi -> Badai / Hujan Lebat
+                    weatherText = "BADAI ⛈️";
+                    weatherType = "STORM";
+                } else {
+                    // Probabilitas menengah (di atas threshold tapi di bawah 75%)
+                    weatherText = "HUJAN 🌧️";
+                    weatherType = "RAIN";
+                }
+            }
+
+            Logger.log(`Classification result: ${weatherText} (Threshold: ${threshold.toFixed(2)})`, "warn");
+
+            // Animasi GSAP berdasarkan hasil
+            if (weatherType === "STORM") {
+                gsap.to(UI.stormObj, { opacity: 1, scale: 1.2, duration: 1.5, ease: "power3.out" });
+                gsap.to(UI.cloudObj, { opacity: 0, scale: 0.5, duration: 0.8 });
+                gsap.to(UI.sunObj, { opacity: 0, scale: 0.5, duration: 0.8 });
+                
+                UI.resultText.style.background = 'linear-gradient(180deg, #a855f7, #4c1d95)';
+            } 
+            else if (weatherType === "RAIN") {
+                gsap.to(UI.cloudObj, { opacity: 1, scale: 1.2, duration: 1.5, ease: "power3.out" });
+                gsap.to(UI.stormObj, { opacity: 0, scale: 0.5, duration: 0.8 });
+                gsap.to(UI.sunObj, { opacity: 0, scale: 0.5, duration: 0.8 });
+                
+                UI.resultText.style.background = 'linear-gradient(180deg, #22d3ee, #3b82f6)';
+            } 
+            else {
+                // SUN
+                gsap.to(UI.sunObj, { opacity: 1, scale: 1.2, duration: 1.5, ease: "elastic.out(1, 0.5)" });
+                gsap.to(UI.cloudObj, { opacity: 0, scale: 0.5, duration: 0.8 });
+                gsap.to(UI.stormObj, { opacity: 0, scale: 0.5, duration: 0.8 });
+                
+                UI.resultText.style.background = 'linear-gradient(180deg, #fcd34d, #ea580c)';
+            }
+
+            // Update UI Teks
+            UI.resultCity.textContent = `TARGET: ${cityName.toUpperCase()}`;
+            UI.resultText.textContent = weatherText;
+            UI.resultText.style.webkitBackgroundClip = 'text';
+            
+            // Text Pop Animation
+            gsap.fromTo(UI.resultText, 
+                { scale: 0.5, opacity: 0 }, 
+                { scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.7)" }
+            );
+
+            // Progress Bar & Stats
+            UI.resultProb.textContent = `CONFIDENCE: ${percentStr}% | THRESHOLD: ${threshold.toFixed(2)} | LATENCY: ${latency}ms`;
+            UI.progressFill.style.width = `${percentStr}%`;
+            
+            // Number Counter Animation
+            gsap.to(UI.progressLabel, {
+                innerHTML: percentStr + "%",
+                duration: 2,
+                snap: { innerHTML: 0.01 },
+                ease: "power3.out",
+                onUpdate: function() { 
+                    UI.progressLabel.innerHTML = Number(this.targets()[0].innerHTML).toFixed(2) + "%"; 
+                }
+            });
+        }
+
+        // Event Listeners
+        UI.loadBtn.addEventListener('click', initPipeline);
+        UI.predictBtn.addEventListener('click', executeInference);
+
+    </script>
+</body>
+</html>

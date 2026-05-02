@@ -1,0 +1,66 @@
+{
+  "feature_order": [
+    "Tn",
+    "Tx",
+    "Tavg",
+    "RH_avg",
+    "ff_x",
+    "ff_avg"
+  ],
+  "medians": [
+    24.0,
+    31.8,
+    27.1,
+    83.0,
+    4.0,
+    2.0
+  ],
+  "data_min": [
+    0.0,
+    0.0,
+    0.0,
+    24.0,
+    0.0,
+    0.0
+  ],
+  "data_max": [
+    246.0,
+    92.0,
+    141.6,
+    432.0,
+    185.0,
+    86.0
+  ],
+  "range": [
+    246.0,
+    92.0,
+    141.6,
+    408.0,
+    185.0,
+    86.0
+  ],
+  "threshold": 0.44999999999999984,
+  "classes": [
+    "Cerah",
+    "Hujan"
+  ],
+  "paths": {
+    "metadata": "./models/preprocessing_cuaca_webready.json",
+    "tfjs_model": "./models/tfjs/model.json",
+    "tflite_model": "./models/tflite/model_cuaca_webready.tflite"
+  },
+  "notes": {
+    "nama_kota_hanya_untuk_tampilan": true,
+    "fitur_yang_memengaruhi_model": [
+      "Tn",
+      "Tx",
+      "Tavg",
+      "RH_avg",
+      "ff_x",
+      "ff_avg"
+    ],
+    "nilai_kosong_diisi_dengan_median_training": true,
+    "tfjs_export_method": "keras_h5_via_tensorflowjs_converter",
+    "tflite_export_mode": "float32_no_aggressive_optimization"
+  }
+}
