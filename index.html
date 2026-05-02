@@ -780,31 +780,31 @@
         gsap.to(".storm-obj", { y: 15, duration: 3, repeat: -1, yoyo: true, ease: "sine.inOut" });
 
         if (!isTouchDevice) {
-            window.addEventListener('mousemove', (e) => {
-                mouseX = e.clientX;
-                mouseY = e.clientY; // BUG FIXED: Diubah jadi mouseY
-                
-                // Cursor Tracking 
-                cursorDot.style.left = `${mouseX}px`; 
-                cursorDot.style.top = `${mouseY}px`; // BUG FIXED
-                cursorOutline.animate({ left: `${mouseX}px`, top: `${mouseY}px` }, { duration: 500, fill: "forwards" });
+           window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY; // PERBAIKAN: Diubah menjadi mouseY
+            
+            // Cursor Tracking 
+            cursorDot.style.left = `${mouseX}px`; 
+            cursorDot.style.top = `${mouseY}px`; // PERBAIKAN
+            cursorOutline.animate({ left: `${mouseX}px`, top: `${mouseY}px` }, { duration: 500, fill: "forwards" }); // PERBAIKAN
 
-                // Throttle 3D Parallax using requestAnimationFrame for smoothness
-                requestAnimationFrame(() => {
-                    const xOffset = (mouseX / window.innerWidth - 0.5) * 2;
-                    const yOffset = (mouseY / window.innerHeight - 0.5) * 2; // BUG FIXED
-                    
-                    gsap.to(".sun-obj", { 
-                        x: xOffset * 60, rotationY: xOffset * 15, rotationX: yOffset * -15, duration: 0.5, ease: "power1.out" 
-                    });
-                    gsap.to(".cloud-obj", { 
-                        x: xOffset * -90, rotationY: xOffset * -20, rotationX: yOffset * 20, duration: 0.5, ease: "power1.out" 
-                    });
-                    gsap.to(".storm-obj", { 
-                        x: xOffset * -100, rotationY: xOffset * -25, rotationX: yOffset * 25, duration: 0.5, ease: "power1.out" 
-                    });
+            // Throttle 3D Parallax using requestAnimationFrame for smoothness
+            requestAnimationFrame(() => {
+                const xOffset = (mouseX / window.innerWidth - 0.5) * 2;
+                const yOffset = (mouseY / window.innerHeight - 0.5) * 2; // PERBAIKAN
+                
+                gsap.to(".sun-obj", { 
+                    x: xOffset * 60, rotationY: xOffset * 15, rotationX: yOffset * -15, duration: 0.5, ease: "power1.out" 
+                });
+                gsap.to(".cloud-obj", { 
+                    x: xOffset * -90, rotationY: xOffset * -20, rotationX: yOffset * 20, duration: 0.5, ease: "power1.out" 
+                });
+                gsap.to(".storm-obj", { 
+                    x: xOffset * -100, rotationY: xOffset * -25, rotationX: yOffset * 25, duration: 0.5, ease: "power1.out" 
                 });
             });
+        });
 
             // Hover Effect on interactable elements
             const interactables = document.querySelectorAll('button, a, input');
