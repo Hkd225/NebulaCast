@@ -780,7 +780,7 @@
         gsap.to(".storm-obj", { y: 15, duration: 3, repeat: -1, yoyo: true, ease: "sine.inOut" });
 
         if (!isTouchDevice) {
-           window.addEventListener('mousemove', (e) => {
+            window.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY; // PERBAIKAN: Diubah menjadi mouseY
             
@@ -805,7 +805,6 @@
                 });
             });
         });
-
             // Hover Effect on interactable elements
             const interactables = document.querySelectorAll('button, a, input');
             interactables.forEach(el => {
